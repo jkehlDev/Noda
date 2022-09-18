@@ -1,5 +1,5 @@
 {
-	"name": "Noda",
+	"name": "@noda/1.0.0",
 	"version": "1.0.0",
 	"description": "Noda - Glabal cluster queue environnement",
 	"main": "src/index.js",
@@ -9,7 +9,9 @@
 	"scripts": {
 		"prepare": "husky install",
 		"format": "prettier-eslint \"src/**/*.+(js|ts|json)\" --write",
-		"test": "jest"
+		"test": "jest src/",
+		"build": "rm -r -f dist && tsc",
+		"start": "yarn build && nodemon dist/index.js"
 	},
 	"devDependencies": {
 		"@types/jest": "^29.0.3",
@@ -32,5 +34,8 @@
 		"commitizen": {
 			"path": "./node_modules/cz-conventional-changelog"
 		}
+	},
+	"dependencies": {
+		"dotenv": "^16.0.2"
 	}
 }
