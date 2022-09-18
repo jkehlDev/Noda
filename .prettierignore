@@ -1,0 +1,6 @@
+**/.git
+**/.gitignore
+**/.hg
+**/node_modules
+**/yarn.lock
+**/.husky
