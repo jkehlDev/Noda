@@ -1,10 +1,10 @@
-import * as dotenv from 'dotenv';
+import { Server } from 'node:net';
+import { NodaServerConstructable } from './features';
+import { NodaServer, NodaServerOptions } from './models';
 
-dotenv.config();
+export * from './enums';
 
-export type TestFct = () => void;
-export const testFct: TestFct = () => {
-	console.log('hello world', process.env.TZ);
-};
+export * from './models';
 
-testFct();
+export default (server: Server, options?: NodaServerOptions): NodaServer =>
+	new NodaServerConstructable(server, options);

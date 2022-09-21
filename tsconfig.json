@@ -1,13 +1,23 @@
 {
 	"compilerOptions": {
+		"target": "ES2022",
 		"sourceMap": true,
 		"outDir": "dist",
 		"rootDir": "src",
 		"strict": true,
-		"lib": ["esnext"],
+		"lib": [
+			"esnext"
+		],
 		"esModuleInterop": true,
+		"module": "commonjs",
+		"moduleResolution": "node",
 		"resolveJsonModule": true,
-		"types": ["jest", "node"]
+		"types": [
+			"jest",
+			"node"
+		],
 	},
-	"include": ["src/**/*"]
+	"include": [
+		"src/**/*"
+	]
 }
