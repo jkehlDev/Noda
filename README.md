@@ -1,6 +1,8 @@
-# Noda Server
+# [DRAFT] Noda Server
 
-Noda - Server manager queue adressed by sockets
+Noda - Server queue broker adressed by websockets
 License : GNU GENERAL PUBLIC LICENSE Version 3
 
 ## Features
+
+LIST IN COMMING SOON
