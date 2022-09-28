@@ -15,6 +15,8 @@ import {
 import { NodaErrorConstructable } from './NodaErrorConstructable.class';
 
 export class NodaSocketHandlerConstructable implements NodaSocketHandler {
+	private _socketMap = new Map<string, NodeSocket>();
+
 	constructor(
 		private readonly _redisClient: RedisClientType,
 		private readonly _options: NodaServerOptions,
@@ -22,9 +24,12 @@ export class NodaSocketHandlerConstructable implements NodaSocketHandler {
 	) {}
 
 	private resolve(socket: NodeSocket): void {
-		socket.on('close', () => null);
+		socket.on('close', () => {
+			socket.clientId && this._socketMap.delete(socket.clientId);
+		});
 		socket.on('connect', () => {
 			socket.clientId = randomUUID();
+			this._socketMap.set(socket.clientId, socket);
 		});
 		socket.on('data', (data) => {
 			try {
@@ -38,6 +43,9 @@ export class NodaSocketHandlerConstructable implements NodaSocketHandler {
 			}
 		});
 		socket.on('timeout', () => null);
+		socket.on('error', () => {
+			socket.clientId && this._socketMap.delete(socket.clientId);
+		});
 	}
 
 	public getHandler(): (socket: NodeSocket) => void {
