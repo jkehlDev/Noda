@@ -1,4 +1,4 @@
-import { Server, Socket } from 'node:net';
+import { randomUUID } from 'node:crypto';
 import { RedisClientType } from 'redis';
 import {
 	NodaBaseMessage,
@@ -9,7 +9,8 @@ import {
 	NodaServerErrorHandler,
 	NodaServerOptions,
 	NodaSocketHandler,
-	NodaTypeMessages
+	NodaTypeMessages,
+	NodeSocket
 } from '../models';
 import { NodaErrorConstructable } from './NodaErrorConstructable.class';
 
@@ -20,9 +21,11 @@ export class NodaSocketHandlerConstructable implements NodaSocketHandler {
 		private readonly _errorHandler: NodaServerErrorHandler
 	) {}
 
-	private resolve(socket: Socket): void {
+	private resolve(socket: NodeSocket): void {
 		socket.on('close', () => null);
-		socket.on('connect', () => null);
+		socket.on('connect', () => {
+			socket.clientId = randomUUID();
+		});
 		socket.on('data', (data) => {
 			try {
 				handleMessage(decodeData(data))(
@@ -37,17 +40,18 @@ export class NodaSocketHandlerConstructable implements NodaSocketHandler {
 		socket.on('timeout', () => null);
 	}
 
-	public getHandler(): (socket: Socket) => void {
+	public getHandler(): (socket: NodeSocket) => void {
 		return this.resolve;
 	}
 }
 type DecodeData = (data: Buffer) => NodaBaseMessage<NodaTypeMessages>;
 const decodeData: DecodeData = (data) => {
+	const dataString = data.toString();
 	try {
-		return JSON.parse(data.toString());
+		return JSON.parse(dataString);
 	} catch (_error) {
-		throw new NodaErrorConstructable('Failed to decode incoming data buffer', {
-			cause: _error
+		throw new NodaErrorConstructable('Failed to parse incoming data buffer', {
+			cause: new NodaErrorConstructable(_error, { cause: dataString })
 		});
 	}
 };

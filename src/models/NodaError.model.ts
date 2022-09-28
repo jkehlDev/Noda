@@ -7,9 +7,11 @@ export type NodaErrorOptions = {
 
 export interface NodaError extends Error {
 	readonly message: string;
+	readonly code: number;
 	readonly name: string;
 	readonly cause?: NodaError;
-	readonly code?: number;
 	readonly stack?: string;
+	readonly originalCode: number;
+	readonly originalName: string;
 	readonly toString: () => string;
 }
