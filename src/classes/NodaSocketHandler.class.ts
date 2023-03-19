@@ -1,5 +1,6 @@
 import { randomUUID } from 'node:crypto';
 import { RedisClientType } from 'redis';
+import { INodaSocketHandler } from '../interfaces';
 import {
 	NodaBaseMessage,
 	NodaCastMessage,
@@ -8,13 +9,12 @@ import {
 	NodaPublishMessage,
 	NodaServerErrorHandler,
 	NodaServerOptions,
-	NodaSocketHandler,
 	NodaTypeMessages,
 	NodeSocket
-} from '../models';
-import { NodaErrorConstructable } from './NodaErrorConstructable.class';
+} from '../types';
+import { NodaError } from './NodaError.class';
 
-export class NodaSocketHandlerConstructable implements NodaSocketHandler {
+export class NodaSocketHandler implements INodaSocketHandler {
 	private _socketMap = new Map<string, NodeSocket>();
 
 	constructor(
@@ -39,7 +39,7 @@ export class NodaSocketHandlerConstructable implements NodaSocketHandler {
 					this._errorHandler
 				);
 			} catch (_error) {
-				this._errorHandler(new NodaErrorConstructable(_error));
+				this._errorHandler(new NodaError(_error));
 			}
 		});
 		socket.on('timeout', () => null);
@@ -58,8 +58,8 @@ const decodeData: DecodeData = (data) => {
 	try {
 		return JSON.parse(dataString);
 	} catch (_error) {
-		throw new NodaErrorConstructable('Failed to parse incoming data buffer', {
-			cause: new NodaErrorConstructable(_error, { cause: dataString })
+		throw new NodaError('Failed to parse incoming data buffer', {
+			cause: new NodaError(_error, { cause: dataString })
 		});
 	}
 };
@@ -82,7 +82,7 @@ const handleMessage: HandleMessage<NodaTypeMessages> = (message) => {
 	case 'PUBLISH':
 		return handlePublish(<NodaPublishMessage>message);
 	default:
-		throw new NodaErrorConstructable('Unknown message type', {
+		throw new NodaError('Unknown message type', {
 			cause: `type <${message.metadata.type}> not available`
 		});
 	}

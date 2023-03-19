@@ -1,15 +1,15 @@
 import { createServer, Server } from 'node:net';
 import { createClient, RedisClientType } from 'redis';
 import { NodaErrorEnum } from '../enums';
+import { INodaServer } from '../interfaces';
 import {
-	NodaServer,
 	NodaServerErrorHandler,
 	NodaServerOptions
-} from '../models';
-import { NodaErrorConstructable } from './NodaErrorConstructable.class';
-import { NodaSocketHandlerConstructable } from './NodaSocketHandlerConstructable.class';
+} from '../types/NodaServer.model';
+import { NodaError } from './NodaError.class';
+import { NodaSocketHandler as NodaSocketHandler } from './NodaSocketHandler.class';
 
-export class NodaServerConstructable implements NodaServer {
+export class NodaServer implements INodaServer {
 	private static readonly NODA_OPTIONS_DEFAULT: NodaServerOptions = {
 		dev: false
 	};
@@ -22,23 +22,23 @@ export class NodaServerConstructable implements NodaServer {
 
 	constructor(server: Server, options?: Partial<NodaServerOptions>) {
 		this._options = {
-			...NodaServerConstructable.NODA_OPTIONS_DEFAULT,
+			...NodaServer.NODA_OPTIONS_DEFAULT,
 			...options
 		};
 		this._redisClient = createClient();
 		this._redisClient.on('error', (error) => {
-			this._errorHandler(new NodaErrorConstructable(error));
+			this._errorHandler(new NodaError(error));
 		});
 		this._baseServer = server;
 		this._socketServer = createServer(
-			new NodaSocketHandlerConstructable(
+			new NodaSocketHandler(
 				this._redisClient,
 				this._options,
 				this._errorHandler
 			).getHandler()
 		);
 		this._socketServer.on('error', (error) => {
-			this._errorHandler(new NodaErrorConstructable(error));
+			this._errorHandler(new NodaError(error));
 		});
 	}
 
@@ -53,8 +53,7 @@ export class NodaServerConstructable implements NodaServer {
 				this._socketServer.listen(this._baseServer);
 			})
 			.catch((_reason) => {
-				if (_reason)
-					throw new NodaErrorConstructable(NodaErrorEnum.OPEN_FAILED);
+				if (_reason) throw new NodaError(NodaErrorEnum.OPEN_FAILED);
 			});
 	}
 
@@ -66,27 +65,19 @@ export class NodaServerConstructable implements NodaServer {
 					this._socketServer.close((_reason) => {
 						if (_reason) {
 							reject(
-								new NodaErrorConstructable(NodaErrorEnum.CLOSE_FAILED, {
+								new NodaError(NodaErrorEnum.CLOSE_FAILED, {
 									cause: _reason
 								})
 							);
 						} else {
-							if (_reason) {
-								reject(
-									new NodaErrorConstructable(NodaErrorEnum.CLOSE_FAILED, {
-										cause: _reason
-									})
-								);
-							} else {
-								resolve();
-							}
+							resolve();
 						}
 					});
 				})
 				.catch((_reason) => {
 					if (_reason) {
 						reject(
-							new NodaErrorConstructable(NodaErrorEnum.CLOSE_FAILED, {
+							new NodaError(NodaErrorEnum.CLOSE_FAILED, {
 								cause: _reason
 							})
 						);

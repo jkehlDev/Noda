@@ -1,6 +1,3 @@
-export type NodaTypeMessages = 'COMMIT' | 'OBSERVE' | 'PUBLISH' | 'CAST';
-export type NodaPublishType = 'STACK' | 'STREAM' | 'STATE';
-
 export type NodaOptions = {
 	COMMIT: undefined;
 	CAST: { state: 'ALIVE' | 'CLOSE' };
@@ -33,13 +30,13 @@ export type NodaOptions = {
 		);
 	};
 };
-
+export type NodaTypeMessages = 'COMMIT' | 'OBSERVE' | 'PUBLISH' | 'CAST';
+export type NodaPublishType = 'STACK' | 'STREAM' | 'STATE';
 export type NodaMetadata<T extends NodaTypeMessages> = {
 	timestamp: number;
 	type: T;
 	source: string;
 } & NodaOptions[T];
-
 export type NodaContent<T extends NodaTypeMessages> = {
 	COMMIT: {
 		metadata: NodaMetadata<T>;
@@ -52,9 +49,7 @@ export type NodaContent<T extends NodaTypeMessages> = {
 	OBSERVE: { metadata: NodaMetadata<T> };
 	PUBLISH: { metadata: NodaMetadata<T> };
 };
-
 export type NodaBaseMessage<T extends NodaTypeMessages> = NodaContent<T>[T];
-
 export type NodaCommitMessage = NodaBaseMessage<'COMMIT'>;
 export type NodaObserveMessage = NodaBaseMessage<'OBSERVE'>;
 export type NodaPublishMessage = NodaBaseMessage<'PUBLISH'>;

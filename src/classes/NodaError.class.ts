@@ -1,6 +1,7 @@
-import { NodaErrorOptions, NodaError } from '../models';
+import { INodaError } from '../interfaces';
+import { NodaErrorOptions } from '../types';
 
-export class NodaErrorConstructable implements NodaError {
+export class NodaError implements INodaError {
 	private static _DEFAULT_NAME = 'NodaError';
 	private static _DEFAULT_CODE = 500;
 	private static _MSG_SEPARATOR = '> Due to >';
@@ -9,7 +10,7 @@ export class NodaErrorConstructable implements NodaError {
 	public name: string;
 	public message: string;
 
-	public cause?: NodaError;
+	public cause?: INodaError;
 	public stack?: string | undefined;
 
 	public originalCode: number;
@@ -18,22 +19,21 @@ export class NodaErrorConstructable implements NodaError {
 	constructor(error: unknown, options?: NodaErrorOptions) {
 		this.message =
 			typeof error === 'object'
-				? (<{ message?: string }>error).message || JSON.stringify(error)
+				? (<{ message?: string }>error)?.message || JSON.stringify(error)
 				: `${error}`;
 		this.cause =
-			(<{ cause?: NodaError }>error).cause ||
-			new NodaErrorConstructable(options?.cause) ||
-			undefined;
+			(<{ cause?: INodaError }>error)?.cause ||
+			(options?.cause ? new NodaError(options.cause) : undefined);
 
 		this.code =
-			(<{ code?: number }>error).code ||
+			(<{ code?: number }>error)?.code ||
 			options?.code ||
-			NodaErrorConstructable._DEFAULT_CODE;
+			NodaError._DEFAULT_CODE;
 
 		this.name =
-			(<{ name?: string }>error).name ||
+			(<{ name?: string }>error)?.name ||
 			options?.name ||
-			NodaErrorConstructable._DEFAULT_NAME;
+			NodaError._DEFAULT_NAME;
 
 		this.stack =
 			(<{ stack?: string }>error).stack || options?.stack || undefined;
@@ -44,9 +44,7 @@ export class NodaErrorConstructable implements NodaError {
 
 	toString(): string {
 		return this.cause
-			? `${this.message}${
-				NodaErrorConstructable._MSG_SEPARATOR
-			  }${this.cause.toString()}`
+			? `${this.message}${NodaError._MSG_SEPARATOR}${this.cause.toString()}`
 			: this.message;
 	}
 }
