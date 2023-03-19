@@ -16,6 +16,11 @@ export class NodaError implements INodaError {
 	public originalCode: number;
 	public originalName: string;
 
+	/**
+	 *
+	 * @param error
+	 * @param options
+	 */
 	constructor(error: unknown, options?: NodaErrorOptions) {
 		this.message =
 			typeof error === 'object'
@@ -42,6 +47,10 @@ export class NodaError implements INodaError {
 		this.originalName = this.cause?.name || this.name;
 	}
 
+	/**
+	 *
+	 * @returns
+	 */
 	toString(): string {
 		return this.cause
 			? `${this.message}${NodaError._MSG_SEPARATOR}${this.cause.toString()}`

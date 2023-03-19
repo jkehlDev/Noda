@@ -32,12 +32,12 @@ export type NodaOptions = {
 };
 export type NodaTypeMessages = 'COMMIT' | 'OBSERVE' | 'PUBLISH' | 'CAST';
 export type NodaPublishType = 'STACK' | 'STREAM' | 'STATE';
-export type NodaMetadata<T extends NodaTypeMessages> = {
+type NodaMetadata<T extends NodaTypeMessages | unknown> = {
 	timestamp: number;
 	type: T;
 	source: string;
-} & NodaOptions[T];
-export type NodaContent<T extends NodaTypeMessages> = {
+} & (T extends NodaTypeMessages ? NodaOptions[T] : { type: NodaTypeMessages });
+type NodaContent<T extends NodaTypeMessages> = {
 	COMMIT: {
 		metadata: NodaMetadata<T>;
 		value: string;
@@ -49,7 +49,9 @@ export type NodaContent<T extends NodaTypeMessages> = {
 	OBSERVE: { metadata: NodaMetadata<T> };
 	PUBLISH: { metadata: NodaMetadata<T> };
 };
-export type NodaBaseMessage<T extends NodaTypeMessages> = NodaContent<T>[T];
+type NodaBaseMessageUnknow = { metadata: NodaMetadata<unknown> };
+export type NodaBaseMessage<T extends NodaTypeMessages | unknown> =
+	T extends NodaTypeMessages ? NodaContent<T>[T] : NodaBaseMessageUnknow;
 export type NodaCommitMessage = NodaBaseMessage<'COMMIT'>;
 export type NodaObserveMessage = NodaBaseMessage<'OBSERVE'>;
 export type NodaPublishMessage = NodaBaseMessage<'PUBLISH'>;

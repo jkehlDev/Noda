@@ -15,11 +15,16 @@ export class NodaServer implements INodaServer {
 	};
 
 	private readonly _options: NodaServerOptions;
-	private readonly _baseServer: Server;
+	private readonly _httpServer: Server;
 	private readonly _socketServer: Server;
 	private _errorHandler: NodaServerErrorHandler = () => null;
 	private readonly _redisClient: RedisClientType;
 
+	/**
+	 *
+	 * @param server
+	 * @param options
+	 */
 	constructor(server: Server, options?: Partial<NodaServerOptions>) {
 		this._options = {
 			...NodaServer.NODA_OPTIONS_DEFAULT,
@@ -29,7 +34,7 @@ export class NodaServer implements INodaServer {
 		this._redisClient.on('error', (error) => {
 			this._errorHandler(new NodaError(error));
 		});
-		this._baseServer = server;
+		this._httpServer = server;
 		this._socketServer = createServer(
 			new NodaSocketHandler(
 				this._redisClient,
@@ -42,21 +47,33 @@ export class NodaServer implements INodaServer {
 		});
 	}
 
+	/**
+	 *
+	 * @param errorHandler
+	 */
 	public onError(errorHandler: NodaServerErrorHandler) {
 		this._errorHandler = errorHandler;
 	}
 
+	/**
+	 *
+	 * @returns
+	 */
 	public async open(): Promise<void> {
 		return this._redisClient
 			.connect()
 			.then(() => {
-				this._socketServer.listen(this._baseServer);
+				this._socketServer.listen(this._httpServer);
 			})
 			.catch((_reason) => {
 				if (_reason) throw new NodaError(NodaErrorEnum.OPEN_FAILED);
 			});
 	}
 
+	/**
+	 *
+	 * @returns
+	 */
 	public async close(): Promise<void> {
 		return new Promise((resolve, reject) => {
 			this._redisClient
