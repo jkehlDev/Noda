@@ -1,23 +1,23 @@
-import { randomUUID } from 'node:crypto';
-import { RedisClientType } from 'redis';
-import { NodaErrorEnum } from '../enums';
-import { INodaSocketHandler } from '../interfaces';
-import {
+import type {
 	DecodeData,
 	HandleMessage,
 	NodaBaseMessage,
+	NodaContentType,
 	NodaServerErrorHandler,
 	NodaServerOptions,
-	NodaTypeMessages,
 	NodeSocket,
 	SocketHandler
-} from '../types';
+} from '../../types';
+import { INodaSocketHandler } from '../../interfaces';
 import { NodaError } from './NodaError.class';
+import { NodaErrorEnum } from '../../enums';
+import { randomUUID } from 'node:crypto';
+import { RedisClientType } from 'redis';
 
 export class NodaSocketHandler implements INodaSocketHandler {
 	private _socketMap = new Map<string, NodeSocket>();
 	private static readonly _handleMessageByMessageType: {
-		[P in NodaTypeMessages]: HandleMessage;
+		[P in Exclude<NodaContentType, 'UNKNOWN'>]: HandleMessage;
 	} = {
 			CAST: NodaSocketHandler._handleCast,
 			COMMIT: NodaSocketHandler._handleCommit,
@@ -95,19 +95,16 @@ export class NodaSocketHandler implements INodaSocketHandler {
 	 * @param message
 	 * @returns
 	 */
-	private static handleMessage: HandleMessage = (
-		message: NodaBaseMessage<unknown>
-	) => {
+	private static handleMessage: HandleMessage = (message: unknown) => {
+		const messageType = (<NodaBaseMessage<'UNKNOWN'>>message)?.metadata?.type;
 		if (
-			message?.metadata?.type ||
-			!NodaSocketHandler._handleMessageByMessageType[message.metadata.type]
+			!messageType ||
+			!NodaSocketHandler._handleMessageByMessageType[messageType]
 		)
 			throw new NodaError(NodaErrorEnum.DATA_TYPE_INVALID, {
-				cause: `type <${message?.metadata?.type || 'unknown'}> invalid`
+				cause: `type <${messageType || 'unknown'}> invalid`
 			});
-		return NodaSocketHandler._handleMessageByMessageType[message.metadata.type](
-			message
-		);
+		return NodaSocketHandler._handleMessageByMessageType[messageType](message);
 	};
 
 	/**
@@ -115,7 +112,7 @@ export class NodaSocketHandler implements INodaSocketHandler {
 	 * @param message
 	 * @returns
 	 */
-	private static _handleCast(message: NodaBaseMessage<unknown>): SocketHandler {
+	private static _handleCast(message: unknown): SocketHandler {
 		message = message as NodaBaseMessage<'CAST'>;
 		return (redisClient: RedisClientType, options: NodaServerOptions) => {
 			console.log(message);
@@ -127,9 +124,7 @@ export class NodaSocketHandler implements INodaSocketHandler {
 	 * @param message
 	 * @returns
 	 */
-	private static _handleCommit(
-		message: NodaBaseMessage<unknown>
-	): SocketHandler {
+	private static _handleCommit(message: unknown): SocketHandler {
 		message = message as NodaBaseMessage<'COMMIT'>;
 		return (redisClient: RedisClientType, options: NodaServerOptions) => {
 			console.log(message);
@@ -141,9 +136,7 @@ export class NodaSocketHandler implements INodaSocketHandler {
 	 * @param message
 	 * @returns
 	 */
-	private static _handleObserve(
-		message: NodaBaseMessage<unknown>
-	): SocketHandler {
+	private static _handleObserve(message: unknown): SocketHandler {
 		message = message as NodaBaseMessage<'PUBLISH'>;
 		return (redisClient: RedisClientType, options: NodaServerOptions) => {
 			console.log(message);
@@ -155,9 +148,7 @@ export class NodaSocketHandler implements INodaSocketHandler {
 	 * @param message
 	 * @returns
 	 */
-	private static _handlePublish(
-		message: NodaBaseMessage<unknown>
-	): SocketHandler {
+	private static _handlePublish(message: unknown): SocketHandler {
 		message = message as NodaBaseMessage<'OBSERVE'>;
 		return (redisClient: RedisClientType, options: NodaServerOptions) => {
 			console.log(message);

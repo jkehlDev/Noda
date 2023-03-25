@@ -1,11 +1,11 @@
 import { Server } from 'node:net';
-import { NodaServer } from './classes';
-import { INodaServer } from './interfaces';
-import { NodaServerOptions } from './types/NodaServer.model';
+import { NodaServer } from './classes/noda';
+import { INodaServer } from './interfaces/noda';
+import { NodaServerOptions } from './types/';
 
 export * from './enums';
 
-export * from './interfaces';
+export * from './interfaces/noda';
 
 export default (server: Server, options?: NodaServerOptions): INodaServer =>
 	new NodaServer(server, options);

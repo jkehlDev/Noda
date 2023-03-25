@@ -1,13 +1,10 @@
-import { createServer, Server } from 'node:net';
+import type { NodaServerErrorHandler, NodaServerOptions } from '../../types';
 import { createClient, RedisClientType } from 'redis';
-import { NodaErrorEnum } from '../enums';
-import { INodaServer } from '../interfaces';
-import {
-	NodaServerErrorHandler,
-	NodaServerOptions
-} from '../types/NodaServer.model';
+import { createServer, Server } from 'node:net';
+import { INodaServer } from '../../interfaces';
 import { NodaError } from './NodaError.class';
-import { NodaSocketHandler as NodaSocketHandler } from './NodaSocketHandler.class';
+import { NodaErrorEnum } from '../../enums';
+import { NodaSocketHandler } from './NodaSocketHandler.class';
 
 export class NodaServer implements INodaServer {
 	private static readonly NODA_OPTIONS_DEFAULT: NodaServerOptions = {

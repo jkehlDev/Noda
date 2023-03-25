@@ -1,5 +1,5 @@
-import { INodaError } from '../interfaces';
-import { NodaErrorOptions } from '../types';
+import { INodaError } from '../../interfaces';
+import { NodaErrorOptions } from '../../types';
 
 export class NodaError implements INodaError {
 	private static _DEFAULT_NAME = 'NodaError';

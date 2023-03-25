@@ -1,4 +1,4 @@
-import { NodaServerErrorHandler } from '../types';
+import { NodaServerErrorHandler } from '../../types';
 
 export interface INodaServer {
 	readonly onError: (errorHandler: NodaServerErrorHandler) => void;
