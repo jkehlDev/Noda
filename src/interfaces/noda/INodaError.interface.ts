@@ -1,10 +1,33 @@
+/**
+ * Represents an error in Noda framework
+ */
 export interface INodaError extends Error {
-	readonly message: string;
-	readonly code: number;
-	readonly name: string;
-	readonly cause?: INodaError;
-	readonly stack?: string;
-	readonly originalCode: number;
-	readonly originalName: string;
-	readonly toString: () => string;
+	/**
+	 * Error code
+	 */
+	code: number;
+	/**
+	 * Error name
+	 */
+	name: string;
+	/**
+	 * Error message
+	 */
+	message: string;
+	/**
+	 * The cause of the error
+	 */
+	cause?: INodaError;
+	/**
+	 * Error stack trace
+	 */
+	stack?: string | undefined;
+	/**
+	 * The original error code
+	 */
+	originalCode: number;
+	/**
+	 * The original error name
+	 */
+	originalName: string;
 }

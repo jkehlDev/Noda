@@ -4,99 +4,103 @@ import { createServer, Server } from 'node:net';
 import { INodaServer } from '../../interfaces';
 import { NodaError } from './NodaError.class';
 import { NodaErrorEnum } from '../../enums';
-import { NodaSocketHandler } from './NodaSocketHandler.class';
+import { AbstractNodaSocketHandler } from './NodaSocketHandler.abstract';
 
+/**
+ * NodaServer class to manage HTTP and WebSocket servers.
+ */
 export class NodaServer implements INodaServer {
+	/**
+	 * Default options for the NodaServer class.
+	 */
 	private static readonly NODA_OPTIONS_DEFAULT: NodaServerOptions = {
 		dev: false
 	};
 
+	/**
+	 * Options passed to the constructor.
+	 */
 	private readonly _options: NodaServerOptions;
-	private readonly _httpServer: Server;
-	private readonly _socketServer: Server;
-	private _errorHandler: NodaServerErrorHandler = () => null;
-	private readonly _redisClient: RedisClientType;
 
 	/**
-	 *
-	 * @param server
-	 * @param options
+	 * The HTTP server instance.
 	 */
-	constructor(server: Server, options?: Partial<NodaServerOptions>) {
+	private readonly _httpServer: Server;
+
+	/**
+	 * The WebSocket server instance.
+	 */
+	private readonly _socketServer: Server;
+
+	/**
+	 * The error handler function.
+	 */
+	private _errorHandler: NodaServerErrorHandler = () => null;
+
+	/**
+	 * Creates a new instance of NodaServer.
+	 *
+	 * @param server The HTTP server instance.
+	 * @param socketHandler The socket handler.
+	 * @param options Options for the NodaServer class.
+	 */
+	constructor(
+		server: Server,
+		socketHandler: AbstractNodaSocketHandler,
+		options?: Partial<NodaServerOptions>
+	) {
 		this._options = {
 			...NodaServer.NODA_OPTIONS_DEFAULT,
 			...options
 		};
-		this._redisClient = createClient();
-		this._redisClient.on('error', (error) => {
-			this._errorHandler(new NodaError(error));
-		});
+
 		this._httpServer = server;
-		this._socketServer = createServer(
-			new NodaSocketHandler(
-				this._redisClient,
-				this._options,
-				this._errorHandler
-			).getHandler()
-		);
+		this._socketServer = createServer(socketHandler.handle);
+
+		// Set up the WebSocket server error handler.
 		this._socketServer.on('error', (error) => {
 			this._errorHandler(new NodaError(error));
 		});
 	}
 
 	/**
+	 * Sets the error handler function for the NodaServer instance.
 	 *
-	 * @param errorHandler
+	 * @param errorHandler The error handler function.
 	 */
 	public onError(errorHandler: NodaServerErrorHandler) {
 		this._errorHandler = errorHandler;
 	}
 
 	/**
-	 *
-	 * @returns
+	 * Opens the HTTP and WebSocket servers.
 	 */
-	public async open(): Promise<void> {
-		return this._redisClient
-			.connect()
-			.then(() => {
-				this._socketServer.listen(this._httpServer);
-			})
-			.catch((_reason) => {
-				if (_reason) throw new NodaError(NodaErrorEnum.OPEN_FAILED);
-			});
+	public open(): void {
+		try {
+			this._socketServer.listen(this._httpServer);
+		} catch (error) {
+			throw new NodaError(NodaErrorEnum.OPEN_FAILED, { cause: error });
+		}
 	}
 
 	/**
+	 * Closes the HTTP and WebSocket servers.
 	 *
-	 * @returns
+	 * @returns Promise that resolves when the servers are closed.
 	 */
 	public async close(): Promise<void> {
-		return new Promise((resolve, reject) => {
-			this._redisClient
-				.disconnect()
-				.then(() => {
-					this._socketServer.close((_reason) => {
-						if (_reason) {
-							reject(
-								new NodaError(NodaErrorEnum.CLOSE_FAILED, {
-									cause: _reason
-								})
-							);
-						} else {
-							resolve();
-						}
-					});
-				})
-				.catch((_reason) => {
-					if (_reason) {
-						reject(
-							new NodaError(NodaErrorEnum.CLOSE_FAILED, {
-								cause: _reason
-							})
-						);
-					}
-				});
+		return await new Promise((resolve, reject) => {
+			this._socketServer.close((_reason) => {
+				if (_reason) {
+					reject(
+						new NodaError(NodaErrorEnum.CLOSE_FAILED, {
+							cause: _reason
+						})
+					);
+				} else {
+					resolve();
+				}
+			});
 		});
 	}
 }

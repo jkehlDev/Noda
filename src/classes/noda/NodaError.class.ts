@@ -1,59 +1,113 @@
-import { INodaError } from '../../interfaces';
-import { NodaErrorOptions } from '../../types';
+import type { INodaError } from '../../interfaces';
+import type { NodaErrorOptions } from '../../types';
 
+/**
+ * Class representing a NodaError.
+ * @implements {INodaError}
+ */
 export class NodaError implements INodaError {
+	/**
+	 * The default name for NodaError.
+	 * @private
+	 * @static
+	 */
 	private static _DEFAULT_NAME = 'NodaError';
+
+	/**
+	 * The default error code for NodaError.
+	 * @private
+	 * @static
+	 */
 	private static _DEFAULT_CODE = 500;
+
+	/**
+	 * The separator used for concatenating error messages.
+	 * @private
+	 * @static
+	 */
 	private static _MSG_SEPARATOR = '> Due to >';
 
+	/**
+	 * The error code for the NodaError.
+	 * @public
+	 */
 	public code: number;
+
+	/**
+	 * The name of the NodaError.
+	 * @public
+	 */
 	public name: string;
+
+	/**
+	 * The error message for the NodaError.
+	 * @public
+	 */
 	public message: string;
 
+	/**
+	 * The cause of the NodaError, if any.
+	 * @public
+	 */
 	public cause?: INodaError;
+
+	/**
+	 * The stack trace for the NodaError, if any.
+	 * @public
+	 */
 	public stack?: string | undefined;
 
+	/**
+	 * The original error code for the NodaError.
+	 * @public
+	 */
 	public originalCode: number;
+
+	/**
+	 * The original error name for the NodaError.
+	 * @public
+	 */
 	public originalName: string;
 
 	/**
-	 *
-	 * @param error
-	 * @param options
+	 * Creates a new NodaError.
+	 * @param {unknown} error - The error object or message.
+	 * @param {NodaErrorOptions} [options] - The options for the error.
 	 */
 	constructor(error: unknown, options?: NodaErrorOptions) {
-		this.message =
-			typeof error === 'object'
-				? (<{ message?: string }>error)?.message || JSON.stringify(error)
-				: `${error}`;
-		this.cause =
-			(<{ cause?: INodaError }>error)?.cause ||
-			(options?.cause ? new NodaError(options.cause) : undefined);
+		if (typeof error !== 'object') {
+			this.message = Object(error).toString();
+			this.code = NodaError._DEFAULT_CODE;
+			this.name = NodaError._DEFAULT_NAME;
+		} else {
+			const errorTemplated = error as INodaError;
+			this.message = errorTemplated?.message ?? 'Undefined error';
+			this.cause =
+				(errorTemplated?.cause && new NodaError(errorTemplated.cause)) ||
+				(options?.cause ? new NodaError(options.cause) : undefined);
 
-		this.code =
-			(<{ code?: number }>error)?.code ||
-			options?.code ||
-			NodaError._DEFAULT_CODE;
+			this.code =
+				errorTemplated?.code ??
+				(options?.code || undefined) ??
+				NodaError._DEFAULT_CODE;
 
-		this.name =
-			(<{ name?: string }>error)?.name ||
-			options?.name ||
-			NodaError._DEFAULT_NAME;
-
-		this.stack =
-			(<{ stack?: string }>error).stack || options?.stack || undefined;
-
-		this.originalCode = this.cause?.code || this.code;
-		this.originalName = this.cause?.name || this.name;
+			this.name =
+				errorTemplated?.name ??
+				(options?.name || undefined) ??
+				NodaError._DEFAULT_NAME;
+			this.stack = errorTemplated?.stack ?? (options?.stack || undefined);
+		}
+		this.originalCode = this.cause?.originalCode || this.code;
+		this.originalName = this.cause?.originalName || this.name;
 	}
 
 	/**
-	 *
-	 * @returns
+	 * Returns a string representation of the NodaError.
+	 * @returns {string} - The string representation of the error.
 	 */
 	toString(): string {
 		return this.cause
-			? `${this.message}${NodaError._MSG_SEPARATOR}${this.cause.toString()}`
+			? `${this.message}${NodaError._MSG_SEPARATOR}${this.cause}`
 			: this.message;
 	}
 }

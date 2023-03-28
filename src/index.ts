@@ -1,11 +1,13 @@
 import { Server } from 'node:net';
-import { NodaServer } from './classes/noda';
+import { AbstractNodaSocketHandler, NodaServer } from './classes/noda';
 import { INodaServer } from './interfaces/noda';
 import { NodaServerOptions } from './types/';
 
 export * from './enums';
-
 export * from './interfaces/noda';
 
-export default (server: Server, options?: NodaServerOptions): INodaServer =>
-	new NodaServer(server, options);
+export default (
+	server: Server,
+	socketHandler: AbstractNodaSocketHandler,
+	options?: NodaServerOptions
+): INodaServer => new NodaServer(server, socketHandler, options);
