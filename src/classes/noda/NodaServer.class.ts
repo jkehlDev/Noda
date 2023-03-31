@@ -1,5 +1,4 @@
 import type { NodaServerErrorHandler, NodaServerOptions } from '../../types';
-import { createClient, RedisClientType } from 'redis';
 import { createServer, Server } from 'node:net';
 import { INodaServer } from '../../interfaces';
 import { NodaError } from './NodaError.class';
@@ -23,11 +22,6 @@ export class NodaServer implements INodaServer {
 	private readonly _options: NodaServerOptions;
 
 	/**
-	 * The HTTP server instance.
-	 */
-	private readonly _httpServer: Server;
-
-	/**
 	 * The WebSocket server instance.
 	 */
 	private readonly _socketServer: Server;
@@ -45,7 +39,7 @@ export class NodaServer implements INodaServer {
 	 * @param options Options for the NodaServer class.
 	 */
 	constructor(
-		server: Server,
+		private readonly _httpServer: Server,
 		socketHandler: AbstractNodaSocketHandler,
 		options?: Partial<NodaServerOptions>
 	) {
@@ -54,7 +48,6 @@ export class NodaServer implements INodaServer {
 			...options
 		};
 
-		this._httpServer = server;
 		this._socketServer = createServer(socketHandler.handle);
 
 		// Set up the WebSocket server error handler.
@@ -92,6 +85,7 @@ export class NodaServer implements INodaServer {
 		return await new Promise((resolve, reject) => {
 			this._socketServer.close((_reason) => {
 				if (_reason) {
+					
 					reject(
 						new NodaError(NodaErrorEnum.CLOSE_FAILED, {
 							cause: _reason

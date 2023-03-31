@@ -5,7 +5,7 @@ import type { NodaMiddleware } from '../../types/middleware/NodaMiddleware.type'
  * A generic middleware class that can be used to compose a series of middleware functions.
  * @remarks The input and output types for the middleware chain can be defined using generics.
  */
-export default class NodaMiddlewareChain<T> implements INodaMiddlewareChain<T> {
+export class NodaMiddlewareChain<T> implements INodaMiddlewareChain<T> {
 	private readonly _middleware: NodaMiddleware<T>[] = [];
 
 	/**
