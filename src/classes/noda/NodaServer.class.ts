@@ -85,7 +85,6 @@ export class NodaServer implements INodaServer {
 		return await new Promise((resolve, reject) => {
 			this._socketServer.close((_reason) => {
 				if (_reason) {
-					
 					reject(
 						new NodaError(NodaErrorEnum.CLOSE_FAILED, {
 							cause: _reason
